@@ -31,7 +31,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
             />
           </div>
           <span className="text-xl font-bold text-primary-600 dark:text-primary-400 relative pb-[10px]">
-            W.A.S.P.
+            WASP
             <span className="absolute top-[23px] left-0 text-xs text-gray-700 dark:text-gray-300">
               Nexonware
             </span>
