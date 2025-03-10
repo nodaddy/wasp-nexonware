@@ -22,7 +22,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <div className="relative h-10 w-10 mr-1">
+          <div className="relative h-8 w-8 mr-1">
             <Image
               src={waspLogo}
               alt="Nexonware Logo"
