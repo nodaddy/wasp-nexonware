@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, auth } from "@/lib/firebaseAdmin";
+import { getAdminAuth, getAdminFirestore } from "@/lib/firebaseAdminCore";
 import { CustomClaims } from "@/types/firebase";
 
 // Helper function to extract domain from email
@@ -10,13 +10,9 @@ const extractDomain = (email: string): string => {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if Firebase Admin is initialized
-    if (!db || !auth) {
-      return NextResponse.json(
-        { error: "Firebase Admin not initialized" },
-        { status: 500 }
-      );
-    }
+    // Get Firebase Admin instances
+    const adminAuth = getAdminAuth();
+    const db = getAdminFirestore();
 
     // Get the authorization header
     const authHeader = request.headers.get("authorization");
@@ -37,11 +33,19 @@ export async function GET(request: NextRequest) {
 
     try {
       // Verify the token and get the user
-      const decodedToken = await auth.verifyIdToken(idToken);
-      const userRecord = await auth.getUser(decodedToken.uid);
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
+      const userRecord = await adminAuth.getUser(decodedToken.uid);
 
       // Check if user has custom claims
       const customClaims: CustomClaims = userRecord.customClaims || {};
+
+      // Only allow admins and analysts to access this data
+      if (customClaims.role !== "admin" && customClaims.role !== "analyst") {
+        return NextResponse.json(
+          { error: "Unauthorized access" },
+          { status: 403 }
+        );
+      }
 
       // Get the company ID from custom claims
       const companyId = customClaims.companyId;
@@ -68,11 +72,17 @@ export async function GET(request: NextRequest) {
       const emailDomains = companyData?.emailDomains || [];
 
       if (!emailDomains.length) {
-        return NextResponse.json({ totalUsers: 0 });
+        return NextResponse.json({
+          totalUsers: 0,
+          trend: {
+            value: "0%",
+            positive: true,
+          },
+        });
       }
 
       // List all users
-      const listUsersResult = await auth.listUsers();
+      const listUsersResult = await adminAuth.listUsers();
 
       // Filter users by domain
       const companyUsers = listUsersResult.users.filter((user) => {

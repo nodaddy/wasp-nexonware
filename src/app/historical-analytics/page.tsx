@@ -1420,6 +1420,7 @@ export default function HistoricalAnalyticsPage() {
         setSummaryError(null);
 
         const token = await getUserToken();
+
         if (!token) {
           throw new Error("Failed to get authentication token");
         }
