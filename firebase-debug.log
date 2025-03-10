@@ -1,0 +1,31 @@
+[debug] [2025-03-09T17:10:08.290Z] ----------------------------------------------------------------------
+[debug] [2025-03-09T17:10:08.294Z] Command:       /usr/local/bin/node /usr/local/bin/firebase init database
+[debug] [2025-03-09T17:10:08.294Z] CLI Version:   13.15.0
+[debug] [2025-03-09T17:10:08.294Z] Platform:      darwin
+[debug] [2025-03-09T17:10:08.294Z] Node Version:  v20.12.2
+[debug] [2025-03-09T17:10:08.294Z] Time:          Sun Mar 09 2025 22:40:08 GMT+0530 (India Standard Time)
+[debug] [2025-03-09T17:10:08.294Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-03-09T17:10:08.296Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2025-03-09T17:10:08.324Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-09T17:10:08.324Z] > authorizing via signed-in user (neeleshsharma351@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/romitasharma/Desktop/Nexonware/nexonware-eap
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-03-09T17:10:09.054Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-03-09T17:10:09.054Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}

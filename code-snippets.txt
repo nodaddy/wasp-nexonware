@@ -1,0 +1,182 @@
+
+      {/* Featured In Section */}
+      <section className="py-12 bg-neutral-50 relative">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-semibold text-center mb-8">
+            Featured In
+          </h2>
+
+          <div className="relative max-w-full overflow-hidden">
+            {/* Gradient overlay for left fade effect */}
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-neutral-50 to-transparent z-10"></div>
+
+            {/* Scrolling logos container */}
+            <div className="flex items-center space-x-12 overflow-hidden py-4">
+              {/* Duplicate logos to create infinite scroll effect */}
+              {[...Array(2)].map((_, dupeIndex) => (
+                <React.Fragment key={dupeIndex}>
+                  {/* TechCrunch */}
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-36 grayscale opacity-70">
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xl font-bold text-neutral-500">
+                          TechCrunch
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Forbes */}
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-36 grayscale opacity-70">
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xl font-bold text-neutral-500">
+                          Forbes
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Wired */}
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-36 grayscale opacity-70">
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xl font-bold text-neutral-500">
+                          WIRED
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Business Insider */}
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-36 grayscale opacity-70">
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xl font-bold text-neutral-500">
+                          Business Insider
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* The Verge */}
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-36 grayscale opacity-70">
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xl font-bold text-neutral-500">
+                          The Verge
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Wall Street Journal */}
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-36 grayscale opacity-70">
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xl font-bold text-neutral-500">
+                          WSJ
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Gradient overlay for right fade effect */}
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-neutral-50 to-transparent z-10"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Clients Section */}
+      <section className="py-12 bg-white relative">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-semibold text-center mb-8">
+            Our Clients
+          </h2>
+
+          <div className="relative max-w-full overflow-hidden">
+            {/* Gradient overlay for left fade effect */}
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10"></div>
+
+            {/* Scrolling logos container - same direction as featured */}
+            <div className="flex items-center space-x-12 overflow-hidden py-4 animate-scroll">
+              {/* Duplicate logos to create infinite scroll effect */}
+              {[...Array(2)].map((_, dupeIndex) => (
+                <React.Fragment key={dupeIndex}>
+                  {/* Company 1 */}
+                  <div className="flex-shrink-0">
+                    <div className="h-16 w-40">
+                      <div className="flex items-center justify-center h-full bg-blue-100 rounded-lg">
+                        <span className="text-lg font-bold text-blue-600">
+                          Acme Inc.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company 2 */}
+                  <div className="flex-shrink-0">
+                    <div className="h-16 w-40">
+                      <div className="flex items-center justify-center h-full bg-green-100 rounded-lg">
+                        <span className="text-lg font-bold text-green-600">
+                          GreenTech
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company 3 */}
+                  <div className="flex-shrink-0">
+                    <div className="h-16 w-40">
+                      <div className="flex items-center justify-center h-full bg-purple-100 rounded-lg">
+                        <span className="text-lg font-bold text-purple-600">
+                          Quantum
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company 4 */}
+                  <div className="flex-shrink-0">
+                    <div className="h-16 w-40">
+                      <div className="flex items-center justify-center h-full bg-red-100 rounded-lg">
+                        <span className="text-lg font-bold text-red-600">
+                          RedSoft
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company 5 */}
+                  <div className="flex-shrink-0">
+                    <div className="h-16 w-40">
+                      <div className="flex items-center justify-center h-full bg-yellow-100 rounded-lg">
+                        <span className="text-lg font-bold text-yellow-600">
+                          SunTech
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company 6 */}
+                  <div className="flex-shrink-0">
+                    <div className="h-16 w-40">
+                      <div className="flex items-center justify-center h-full bg-indigo-100 rounded-lg">
+                        <span className="text-lg font-bold text-indigo-600">
+                          IndiCorp
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Gradient overlay for right fade effect */}
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10"></div>
+          </div>
+        </div>
+      </section>
