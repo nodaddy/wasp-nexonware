@@ -163,6 +163,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`Updated existing user ${adminEmail} with admin role`);
       } catch (error) {
+        console.error("Error in user creation or sending email:", error);
         // User doesn't exist, create a temporary user with a random password
         // This user will be properly set up when they complete registration
         const tempPassword = crypto.randomBytes(16).toString("hex");

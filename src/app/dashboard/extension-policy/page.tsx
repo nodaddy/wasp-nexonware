@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   Info,
   Check,
-  X,
   Plus,
   Trash2,
   Bell,

@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Update the user's custom claims
-        let customClaims = { ...(userRecord.customClaims || {}) };
+        const customClaims = { ...(userRecord.customClaims || {}) };
 
         if (role === null) {
           // Remove the role claim if role is null (revoke)

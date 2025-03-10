@@ -11,11 +11,9 @@ import {
   Database,
   Zap,
   Users,
-  ChevronRight,
   AlertTriangle,
   Loader2,
 } from "lucide-react";
-import { date } from "zod";
 
 interface SettingsSectionProps {
   title: string;
@@ -141,12 +139,7 @@ interface IntegrationCardProps {
   icon: React.ReactNode;
 }
 
-const IntegrationCard = ({
-  name,
-  description,
-  status,
-  icon,
-}: IntegrationCardProps) => {
+const IntegrationCard = ({ name, description, icon }: IntegrationCardProps) => {
   return (
     <div className="flex items-start justify-between p-6 border border-gray-200 rounded-lg mb-4">
       <div className="flex items-start">

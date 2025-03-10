@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, auth } from "@/lib/firebase-admin";
+import { db, auth } from "@/lib/firebaseAdmin";
 import { generatePasswordResetToken } from "@/lib/tokens";
 import { sendPasswordResetEmail } from "@/lib/nodemailer";
 

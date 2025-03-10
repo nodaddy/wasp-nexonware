@@ -25,7 +25,7 @@ if (typeof window === "undefined" && !isSchedulerInitialized) {
 /**
  * API route to check the status of the scheduler
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   console.log(`📊 Scheduler status check at ${new Date().toISOString()}`);
 
   return NextResponse.json({
@@ -80,10 +80,12 @@ export async function POST(request: NextRequest) {
       message: "Data archiving process triggered manually",
       results,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ ERROR triggering data archiving process:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
       { status: 500 }
     );
   }

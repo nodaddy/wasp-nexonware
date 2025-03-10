@@ -4,15 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
-import {
-  Users,
-  BarChart2,
-  Settings,
-  HelpCircle,
-  ArrowRight,
-  Shield,
-  Database,
-} from "lucide-react";
+import { Users, BarChart2, ArrowRight, Shield, Database } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -267,7 +259,7 @@ export default function DashboardPage() {
   // Fetch dashboard data on component mount
   useEffect(() => {
     fetchDashboardData();
-  }, [user, loading, getUserToken]);
+  }, [user, loading, getUserToken, fetchDashboardData]);
 
   const quickLinks = [
     {
@@ -303,8 +295,8 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         </div>
         <p className="mt-1 text-sm text-gray-500">
-          Welcome to your NexonWare admin dashboard. Here's an overview of your
-          organization.
+          Welcome to your NexonWare admin dashboard. Here&apos;s an overview of
+          your organization.
         </p>
         {error && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">

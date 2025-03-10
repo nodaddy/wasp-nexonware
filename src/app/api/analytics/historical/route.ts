@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Verify the Firebase token
-      const decodedToken = await adminAuth.verifyIdToken(token);
+      await adminAuth.verifyIdToken(token);
 
       // Optional: Check for specific roles if needed
       // if (!decodedToken.role) {
@@ -299,27 +299,33 @@ export async function GET(request: NextRequest) {
           nextOffset: offset + limit,
         },
       });
-    } catch (queryError: any) {
+    } catch (queryError: unknown) {
       console.error("BigQuery error:", queryError);
 
       // Log more details about the error
-      if (queryError.response) {
+      if (queryError instanceof Error && "response" in queryError) {
         console.error("Error response:", queryError.response);
       }
 
-      if (queryError.message) {
+      if (queryError instanceof Error) {
         console.error("Error message:", queryError.message);
       }
 
       return NextResponse.json(
-        { error: `BigQuery error: ${queryError.message}` },
+        {
+          error: `BigQuery error: ${
+            queryError instanceof Error ? queryError.message : "Unknown error"
+          }`,
+        },
         { status: 500 }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching historical analytics:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
       { status: 500 }
     );
   }
@@ -338,7 +344,7 @@ async function handleUrlAnalytics(
 ) {
   try {
     let query = "";
-    const params: any = {};
+    const params: Record<string, string> = {};
 
     // Add date parameters if provided
     if (startDate) {
@@ -387,7 +393,7 @@ async function handleUrlAnalytics(
             // If data is a JSON string, parse it
             const parsedData = JSON.parse(sampleRow.data);
             console.log("Parsed data field:", parsedData);
-          } catch (e) {
+          } catch {
             console.log("Data field is not valid JSON");
           }
         }
@@ -398,7 +404,7 @@ async function handleUrlAnalytics(
             // If raw_data is a JSON string, parse it
             const parsedRawData = JSON.parse(sampleRow.raw_data);
             console.log("Parsed raw_data field:", parsedRawData);
-          } catch (e) {
+          } catch {
             console.log("raw_data field is not valid JSON");
           }
         }
@@ -603,10 +609,15 @@ async function handleUrlAnalytics(
       analysisType,
       data: rows,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error in URL analytics (${analysisType}):`, error);
     return NextResponse.json(
-      { error: error.message || "Error processing URL analytics" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Error processing URL analytics",
+      },
       { status: 500 }
     );
   }

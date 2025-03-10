@@ -199,11 +199,11 @@ export async function GET(request: NextRequest) {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in events endpoint:", error);
 
     // Check for specific BigQuery errors
-    if (error.message && error.message.includes("Unrecognized name")) {
+    if (error instanceof Error && error.message.includes("Unrecognized name")) {
       return NextResponse.json(
         {
           error:
@@ -215,7 +215,9 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
       { status: 500 }
     );
   }

@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  archiveDataToBigQuery,
-  archiveMetricsToBigQuery,
-  getTimestampDaysAgo,
-} from "@/lib/firebaseDataArchive";
-import { auth as adminAuth } from "@/lib/firebaseAdmin";
+import { archiveMetricsToBigQuery } from "@/lib/firebaseDataArchive";
 
 /**
  * DATA ARCHIVING API
@@ -120,12 +115,12 @@ export async function POST(request: NextRequest) {
       }`,
       result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in data archiving:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Unknown error",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -155,10 +150,12 @@ export async function GET(request: NextRequest) {
       archiveTypes: ["standard", "metrics"],
       message: "Data archiving service is ready",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in data archiving status API:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
       { status: 500 }
     );
   }

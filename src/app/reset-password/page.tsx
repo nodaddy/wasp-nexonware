@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,7 +32,22 @@ const passwordSchema = z
 // Infer the type from the schema
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-export default function ResetPasswordPage(): React.ReactNode {
+// Loading component
+function ResetPasswordLoading() {
+  return (
+    <AuthLayout
+      title="Reset Your Password"
+      subtitle="Create a new password for your account"
+    >
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    </AuthLayout>
+  );
+}
+
+// Main content component that uses useSearchParams
+function ResetPasswordContent(): React.ReactNode {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -129,11 +144,8 @@ export default function ResetPasswordPage(): React.ReactNode {
               a new password reset link.
             </p>
             <div className="mt-4">
-              <Button
-                variant="primary"
-                onClick={() => router.push("/forgot-password")}
-              >
-                Request New Reset Link
+              <Button variant="primary" onClick={() => router.push("/login")}>
+                Return to Login
               </Button>
             </div>
           </div>
@@ -161,8 +173,8 @@ export default function ResetPasswordPage(): React.ReactNode {
               Password Reset Successfully!
             </h3>
             <p className="mt-2 text-sm text-neutral-subtitle">
-              Your password has been reset successfully. You can now log in to
-              your account with your new password.
+              Your password has been reset successfully. You can now log in with
+              your new password.
             </p>
             <div className="mt-4">
               <Button variant="primary" onClick={() => router.push("/login")}>
@@ -172,7 +184,7 @@ export default function ResetPasswordPage(): React.ReactNode {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <Input
             label="New Password"
             type="password"
@@ -210,5 +222,14 @@ export default function ResetPasswordPage(): React.ReactNode {
         </form>
       )}
     </AuthLayout>
+  );
+}
+
+// Main component with Suspense
+export default function ResetPasswordPage(): React.ReactNode {
+  return (
+    <Suspense fallback={<ResetPasswordLoading />}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

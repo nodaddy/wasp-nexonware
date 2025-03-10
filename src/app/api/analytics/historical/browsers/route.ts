@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     // Build date filter clause
     let dateFilter = "";
-    const params: any = {};
+    const params: Record<string, string> = {};
 
     if (startDate) {
       params.startDate = startDate;
@@ -286,15 +286,21 @@ export async function GET(request: NextRequest) {
         ],
         message: `Using mock data as fallback for company ID: ${companyId}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching browser data:", error);
       console.error(`Error occurred for company ${companyId}`);
 
       // Check for specific BigQuery errors
-      let errorMessage = error.message || "Error processing browser data";
+      let errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Error processing browser data";
 
       // Check if it's a column not found error
-      if (error.message && error.message.includes("Unrecognized name")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("Unrecognized name")
+      ) {
         errorMessage =
           "Schema error: One or more required columns are missing in the BigQuery table. Using fallback data.";
 
@@ -317,14 +323,15 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in browsers endpoint:", error);
 
     // Provide a more helpful error message
-    let errorMessage = error.message || "Internal server error";
-    let statusCode = 500;
+    let errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
+    const statusCode = 500;
 
-    if (error.message && error.message.includes("Unrecognized name")) {
+    if (error instanceof Error && error.message.includes("Unrecognized name")) {
       errorMessage =
         "Schema error: One or more required columns are missing in the BigQuery table. Using fallback data.";
 

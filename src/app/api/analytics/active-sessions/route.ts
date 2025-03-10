@@ -63,7 +63,6 @@ export async function GET(request: NextRequest) {
       // Count unique users from the metrics path
       const data = snapshot.val();
       const uniqueUsers = new Set();
-      const currentTime = Date.now();
 
       // Process the data structure where timestamp is part of the path
       // Iterate through companyIds

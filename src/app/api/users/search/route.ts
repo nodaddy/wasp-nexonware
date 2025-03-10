@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         };
 
         return NextResponse.json(userData);
-      } catch (error) {
+      } catch {
         // User not found
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }

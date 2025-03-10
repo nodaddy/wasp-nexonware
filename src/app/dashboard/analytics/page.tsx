@@ -1,18 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
-  Calendar,
   Download,
-  Filter,
-  RefreshCw,
-  ChevronDown,
   BarChart2,
   PieChart,
   LineChart as LineChartIcon,
-  Users,
-  Chrome,
-  Shield,
   Clipboard,
   Upload,
   Globe,
@@ -23,10 +16,7 @@ import {
   getClipboardEventsByType,
   getFileDownloadsByType,
   getFileUploadsByType,
-  getDomainVisits,
-  getSensitiveDataEvents,
   getTopDomains,
-  getUserActivityOverTime,
 } from "../../../lib/analyticsUtils";
 import {
   BarChart,
@@ -49,6 +39,7 @@ import {
   FileDownload,
   FileUpload,
   ClipboardEvent,
+  UrlVisit,
 } from "../../../types/metrics";
 
 interface ChartCardProps {
@@ -141,7 +132,7 @@ const AnimatedCounter = ({
       setIsAnimating(true);
 
       // Use a simple counter animation
-      let start = displayValue;
+      const start = displayValue;
       const end = value;
       const duration = 1000; // 1 second
       const frameDuration = 1000 / 60; // 60fps
@@ -437,17 +428,18 @@ const WebsiteActivityChart = ({
 }) => {
   // Combine all URL data from all users
   const allUrls = Object.values(companyData || {}).reduce(
-    (acc: Record<string, any>, userData: UserMetrics) => {
+    (acc, userData: UserMetrics) => {
       if (userData.urls) {
         return { ...acc, ...userData.urls };
       }
       return acc;
     },
-    {}
+    {} as Record<string, unknown>
   );
 
   // Get top domains
-  const topDomains = getTopDomains(allUrls, 10);
+  // Using type assertion to satisfy the function parameter requirements
+  const topDomains = getTopDomains(allUrls as Record<string, UrlVisit>, 10);
 
   // Format data for Recharts
   const chartData = Object.entries(topDomains).map(([domain, count]) => ({
@@ -522,8 +514,10 @@ const UserActivityOverTimeChart = ({
           if (userData[eventType as keyof UserMetrics]) {
             Object.values(
               userData[eventType as keyof UserMetrics] || {}
-            ).forEach((event: Record<string, any>) => {
-              const eventTime = new Date(event.timestamp);
+            ).forEach((event: Record<string, unknown>) => {
+              const eventTime = new Date(
+                event.timestamp as string | number | Date
+              );
 
               // Only include events from the last 6 hours
               if (eventTime >= sixHoursAgo && eventTime <= now) {
@@ -868,7 +862,24 @@ const ClipboardActivityChart = ({
     totalEvents > 0 ? Math.round((eventsByType.cut / totalEvents) * 100) : 0;
 
   // Active shape for hover effect
-  const renderActiveShape = (props: any) => {
+  // Using unknown for props to avoid type errors with recharts
+  const renderActiveShape = (props: unknown) => {
+    // Cast to a specific type to avoid excessive type checking
+    // This is acceptable in this specific case for a UI component
+    // where we know the structure but it's complex to type properly
+    const p = props as {
+      cx: number;
+      cy: number;
+      midAngle: number;
+      innerRadius: number;
+      outerRadius: number;
+      startAngle: number;
+      endAngle: number;
+      fill: string;
+      payload: { name: string; value: number };
+      percent: number;
+      value: number;
+    };
     const {
       cx,
       cy,
@@ -881,7 +892,7 @@ const ClipboardActivityChart = ({
       payload,
       percent,
       value,
-    } = props;
+    } = p;
     const sin = Math.sin((-midAngle * Math.PI) / 180);
     const cos = Math.cos((-midAngle * Math.PI) / 180);
     const sx = cx + (outerRadius + 10) * cos;
@@ -939,7 +950,7 @@ const ClipboardActivityChart = ({
 
   // State for active index
   const [activeIndex, setActiveIndex] = useState(0);
-  const onPieEnter = (_: any, index: number) => {
+  const onPieEnter = (_: unknown, index: number) => {
     setActiveIndex(index);
   };
 

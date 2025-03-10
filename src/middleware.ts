@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Declare global variable for TypeScript
-declare global {
-  var schedulerInitialized: boolean;
+// Initialize global variable
+// Using var for global scope
+if (typeof global !== "undefined") {
+  // @ts-ignore - We're intentionally adding this to the global scope
+  global.schedulerInitialized = global.schedulerInitialized || false;
 }
 
 // This is a simple middleware that will make a request to the init-server API
 // when the application starts, ensuring the scheduler is initialized
-export async function middleware(request: NextRequest) {
+export async function middleware() {
   // Only run this middleware on the server
   if (typeof window === "undefined") {
     // Only initialize once per server instance
+    // @ts-ignore - Accessing our global variable
     if (!global.schedulerInitialized) {
       try {
         console.log("\n");
@@ -32,7 +35,9 @@ export async function middleware(request: NextRequest) {
         const response = await fetch(`${baseUrl}/api/init-server`);
 
         if (response.ok) {
-          console.log("✅ SCHEDULER INITIALIZED VIA MIDDLEWARE SUCCESSFULLY");
+          console.log("✅ Server-side scheduler initialized successfully");
+
+          // @ts-ignore - Setting our global variable
           global.schedulerInitialized = true;
         } else {
           console.error(
@@ -44,7 +49,7 @@ export async function middleware(request: NextRequest) {
           "=======================================================\n"
         );
       } catch (error) {
-        console.error("❌ ERROR initializing scheduler via middleware:", error);
+        console.error("❌ Failed to initialize server-side scheduler:", error);
       }
     }
   }

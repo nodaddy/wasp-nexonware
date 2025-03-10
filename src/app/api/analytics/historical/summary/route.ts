@@ -4,7 +4,7 @@ import { getAdminAuth } from "@/lib/firebaseAdminCore";
 
 // Cache for summary data
 type CacheEntry = {
-  data: any;
+  data: Record<string, unknown>;
   expiresAt: number;
 };
 
@@ -154,7 +154,6 @@ export async function GET(request: NextRequest) {
   }
 
   // Get query parameters
-  const { searchParams } = new URL(request.url);
   const companyId = request.headers.get("X-Company-ID");
   const cacheKey = `${companyId}`;
 
@@ -260,10 +259,14 @@ export async function GET(request: NextRequest) {
     };
 
     if (metricsTypeResults[0] && metricsTypeResults[0].length > 0) {
-      metricsTypeResults[0].forEach((row: any) => {
-        if (row.metricsType && metricsByType.hasOwnProperty(row.metricsType)) {
-          metricsByType[row.metricsType as keyof typeof metricsByType] =
-            row.count;
+      metricsTypeResults[0].forEach((row: Record<string, unknown>) => {
+        const metricsType = row.metricsType as string;
+        if (
+          metricsType &&
+          Object.prototype.hasOwnProperty.call(metricsByType, metricsType)
+        ) {
+          metricsByType[metricsType as keyof typeof metricsByType] =
+            row.count as number;
         }
       });
     }

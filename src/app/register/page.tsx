@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,15 +18,23 @@ const extractDomain = (email: string): string => {
 // Form validation schema
 const registerSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
-  adminName: z.string().min(2, "Admin name must be at least 2 characters"),
-  adminEmail: z.string().email("Please enter a valid email address"),
-  inviteCode: z.string().min(1, "Invite code is required"),
+  email: z.string().email("Invalid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(
+      /[^A-Za-z0-9]/,
+      "Password must contain at least one special character"
+    ),
 });
 
-// Define the form data type
+// Infer the type from the schema
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-// Define the API response type
+// Response type
 interface RegisterResponse {
   success: boolean;
   message: string;
@@ -35,7 +43,7 @@ interface RegisterResponse {
   error?: string;
 }
 
-// Define the invite data type
+// Invite data type
 interface InviteData {
   id: string;
   code: string;
@@ -44,87 +52,113 @@ interface InviteData {
   expiresAt: Date;
 }
 
-export default function RegisterPage() {
-  const searchParams = useSearchParams();
-  const inviteCodeParam = searchParams.get("code");
+// Loading component
+function RegisterLoading() {
+  return (
+    <AuthLayout
+      title="Create an Account"
+      subtitle="Sign up to get started with NexonWare"
+    >
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    </AuthLayout>
+  );
+}
 
+// Main content component that uses useSearchParams
+function RegisterContent() {
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
+  const [inviteCode, setInviteCode] = useState<string>("");
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
-  const [inviteLoading, setInviteLoading] = useState<boolean>(false);
-  const [inviteError, setInviteError] = useState<string>("");
   const [emailDomains, setEmailDomains] = useState<string[]>([]);
+
+  // Get the invite code from URL if present
+  useEffect(() => {
+    const code = searchParams.get("invite");
+    if (code) {
+      setInviteCode(code);
+      fetchInviteDetails(code);
+    }
+  }, [searchParams]);
+
+  // Fetch invite details if we have a code
+  const fetchInviteDetails = async (code: string) => {
+    try {
+      const response = await fetch(`/api/invites/${code}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to validate invite code");
+      }
+
+      if (data.invite) {
+        setInviteData({
+          id: data.invite.id,
+          code: data.invite.code,
+          allowedDomains: data.invite.allowedDomains || [],
+          createdAt: new Date(data.invite.createdAt),
+          expiresAt: new Date(data.invite.expiresAt),
+        });
+
+        if (
+          data.invite.allowedDomains &&
+          data.invite.allowedDomains.length > 0
+        ) {
+          setEmailDomains(data.invite.allowedDomains);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching invite details:", error);
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Failed to validate invite code"
+      );
+    }
+  };
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
     watch,
-    setValue,
+    formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       companyName: "",
-      adminName: "",
-      adminEmail: "",
-      inviteCode: inviteCodeParam || "",
+      email: "",
+      password: "",
     },
   });
 
-  const adminEmail = watch("adminEmail");
-  const inviteCode = watch("inviteCode");
-
-  // Fetch invite details when invite code changes
-  useEffect(() => {
-    if (inviteCode && inviteCode.length > 0) {
-      fetchInviteDetails(inviteCode);
-    } else {
-      setInviteData(null);
-      setInviteError("");
-    }
-  }, [inviteCode]);
-
-  // Extract domain from admin email
-  useEffect(() => {
-    if (adminEmail) {
-      const domain = extractDomain(adminEmail);
-      if (domain && !emailDomains.includes(domain)) {
-        setEmailDomains([domain]);
-      }
-    }
-  }, [adminEmail]);
-
-  const fetchInviteDetails = async (code: string) => {
-    setInviteLoading(true);
-    setInviteError("");
-
-    try {
-      const response = await fetch(`/api/invites/${code}`);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to validate invite code");
-      }
-
-      const data = await response.json();
-      setInviteData(data);
-
-      // If invite has allowed domains, update the email domains
-      if (data.allowedDomains && data.allowedDomains.length > 0) {
-        setEmailDomains(data.allowedDomains);
-      }
-    } catch (error) {
-      setInviteError((error as Error).message);
-      setInviteData(null);
-    } finally {
-      setInviteLoading(false);
-    }
-  };
+  // Watch the email field to validate domain against invite
+  const watchEmail = watch("email");
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     setSubmitError("");
+
+    // Check if email domain is allowed by the invite
+    if (
+      inviteData &&
+      inviteData.allowedDomains &&
+      inviteData.allowedDomains.length > 0
+    ) {
+      const domain = extractDomain(data.email);
+      if (!inviteData.allowedDomains.includes(domain)) {
+        setSubmitError(
+          `Email domain not allowed. Please use an email from one of these domains: ${inviteData.allowedDomains.join(
+            ", "
+          )}`
+        );
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     try {
       const response = await fetch("/api/companies/register", {
@@ -134,22 +168,23 @@ export default function RegisterPage() {
         },
         body: JSON.stringify({
           ...data,
-          emailDomains: emailDomains,
+          inviteCode: inviteCode || null,
         }),
       });
 
       const result: RegisterResponse = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to register company");
+        throw new Error(result.error || "Registration failed");
       }
 
-      // If registration was successful, show success message
-      if (result.success) {
-        setSuccess(true);
-      }
+      setSuccess(true);
     } catch (error) {
-      setSubmitError((error as Error).message);
+      if (error instanceof Error) {
+        setSubmitError(error.message);
+      } else {
+        setSubmitError("An unknown error occurred");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -157,8 +192,8 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Register Your Company"
-      subtitle="Create a new company account on our Enterprise Administration Platform"
+      title="Create an Account"
+      subtitle="Sign up to get started with NexonWare"
     >
       {success ? (
         <div className="card bg-accent-50 border border-accent-200 p-6">
@@ -183,48 +218,24 @@ export default function RegisterPage() {
               Registration Successful!
             </h3>
             <p className="mt-2 text-sm text-neutral-subtitle">
-              We've sent a verification email to the admin email address you
-              provided. Please check the email and follow the instructions to
-              complete the setup.
+              Your account has been created. Please check your email for
+              verification instructions.
             </p>
-            <div className="mt-4">
-              <Button
-                variant="primary"
-                onClick={() => (window.location.href = "/")}
-              >
-                Return to Home
-              </Button>
-            </div>
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label="Invite Code"
-            {...register("inviteCode")}
-            error={errors.inviteCode?.message || inviteError}
-            placeholder="Enter your invite code"
-            required
-            disabled={!!inviteCodeParam}
-          />
-
-          {inviteLoading && (
-            <div className="bg-info-50 border border-info-200 text-info-700 px-4 py-3 rounded-md">
-              Validating invite code...
-            </div>
-          )}
-
-          {inviteData && (
-            <div className="bg-success-50 border border-success-200 text-success-700 px-4 py-3 rounded-md">
-              <p className="font-medium">Valid Invite Code</p>
-              {inviteData.allowedDomains &&
-                inviteData.allowedDomains.length > 0 && (
-                  <p className="text-sm mt-1">
-                    Allowed domains: {inviteData.allowedDomains.join(", ")}
-                  </p>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {inviteCode && inviteData && (
+            <div className="bg-accent-50 border border-accent-200 p-4 rounded-md mb-6">
+              <p className="text-sm text-neutral-subtitle">
+                You&apos;ve been invited to join NexonWare.
+                {emailDomains.length > 0 && (
+                  <span>
+                    {" "}
+                    Please use an email from one of these domains:{" "}
+                    <strong>{emailDomains.join(", ")}</strong>
+                  </span>
                 )}
-              <p className="text-sm mt-1">
-                Expires: {new Date(inviteData.expiresAt).toLocaleString()}
               </p>
             </div>
           )}
@@ -235,47 +246,25 @@ export default function RegisterPage() {
             error={errors.companyName?.message}
             placeholder="Enter your company name"
             required
-            disabled={!inviteData}
           />
 
           <Input
-            label="Admin Name"
-            {...register("adminName")}
-            error={errors.adminName?.message}
-            placeholder="Enter admin's full name"
-            required
-            disabled={!inviteData}
-          />
-
-          <Input
-            label="Admin Email"
+            label="Email Address"
             type="email"
-            {...register("adminEmail")}
-            error={errors.adminEmail?.message}
-            placeholder="Enter admin's email address"
+            {...register("email")}
+            error={errors.email?.message}
+            placeholder="Enter your email address"
             required
-            disabled={!inviteData}
           />
 
-          {emailDomains.length > 0 && (
-            <div className="bg-info-50 border border-info-200 text-info-700 px-4 py-3 rounded-md">
-              <p className="font-medium">Email Domains</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {emailDomains.map((domain, index) => (
-                  <div
-                    key={index}
-                    className="bg-white border border-info-300 rounded-full px-3 py-1 text-sm flex items-center"
-                  >
-                    {domain}
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs mt-2">
-                These domains will be used to automatically associate employees
-                with your company when they register.
-              </p>
-            </div>
-          )}
+          <Input
+            label="Password"
+            type="password"
+            {...register("password")}
+            error={errors.password?.message}
+            placeholder="Create a password"
+            required
+          />
 
           {submitError && (
             <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-md">
@@ -288,23 +277,34 @@ export default function RegisterPage() {
               type="submit"
               variant="primary"
               fullWidth
-              disabled={isSubmitting || !inviteData}
+              disabled={isSubmitting}
             >
-              {isSubmitting ? "Registering..." : "Register Company"}
+              {isSubmitting ? "Creating Account..." : "Create Account"}
             </Button>
           </div>
 
-          <p className="text-center text-sm text-neutral-subtitle mt-4">
-            Already have an account?{" "}
-            <a
-              href="/login"
-              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
-            >
-              Sign in
-            </a>
-          </p>
+          <div className="text-center mt-4">
+            <p className="text-sm text-neutral-subtitle">
+              Already have an account?{" "}
+              <a
+                href="/login"
+                className="text-primary-600 hover:text-primary-700"
+              >
+                Sign in
+              </a>
+            </p>
+          </div>
         </form>
       )}
     </AuthLayout>
+  );
+}
+
+// Main component with Suspense
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterLoading />}>
+      <RegisterContent />
+    </Suspense>
   );
 }

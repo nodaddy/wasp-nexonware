@@ -11,7 +11,7 @@ interface UpdateCompanyRequest {
     address?: string;
     status?: "active" | "pending" | "inactive";
     emailDomains?: string[];
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

@@ -3,10 +3,7 @@ import { getAdminFirestore } from "@/lib/firebaseAdminCore";
 import { Invite } from "@/types/invite";
 import { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { code: string } }
-) {
+export async function GET(request: NextRequest, { params }: any) {
   try {
     // Get the invite code from the URL params
     const { code } = params;
@@ -45,7 +42,7 @@ export async function GET(
     // Query the invite by code (case insensitive)
     console.log(`Querying for invite with code="${code}"`);
     // First try exact match
-    let inviteSnapshot = await db
+    const inviteSnapshot = await db
       .collection("invites")
       .where("code", "==", code)
       .get();

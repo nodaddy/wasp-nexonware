@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     // Build date filter clause
     let dateFilter = "";
-    const params: any = {};
+    const params: Record<string, string> = {};
 
     if (startDate) {
       params.startDate = startDate;
@@ -245,18 +245,25 @@ export async function GET(request: NextRequest) {
         ],
         message: `Using mock data as fallback for company ID: ${companyId}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching domains data:", error);
       console.error(`Error occurred for company ${companyId}`);
       return NextResponse.json(
-        { error: error.message || "Error processing domains data" },
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Error processing domains data",
+        },
         { status: 500 }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in domains endpoint:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
       { status: 500 }
     );
   }

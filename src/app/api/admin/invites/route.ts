@@ -3,7 +3,7 @@ import { db } from "@/lib/firebaseAdmin";
 import { CreateInviteRequest, Invite } from "@/types/invite";
 
 // GET endpoint to list all invites
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Check if Firebase Admin is initialized
     if (!db) {
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     const inviteRef = await db.collection("invites").add(inviteData);
     const inviteDoc = await inviteRef.get();
-    const createdInvite = inviteDoc.data() as any;
+    const createdInvite = inviteDoc.data() as Invite;
 
     return NextResponse.json({
       success: true,

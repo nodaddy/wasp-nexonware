@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,7 +32,7 @@ const passwordSchema = z
 // Infer the type from the schema
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-export default function SetupPasswordPage(): React.ReactNode {
+function SetupPasswordContent(): React.ReactNode {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -207,5 +207,27 @@ export default function SetupPasswordPage(): React.ReactNode {
         </form>
       )}
     </AuthLayout>
+  );
+}
+
+// Loading fallback component
+function SetupPasswordLoading() {
+  return (
+    <AuthLayout
+      title="Set Up Your Password"
+      subtitle="Create a secure password for your account"
+    >
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    </AuthLayout>
+  );
+}
+
+export default function SetupPasswordPage(): React.ReactNode {
+  return (
+    <Suspense fallback={<SetupPasswordLoading />}>
+      <SetupPasswordContent />
+    </Suspense>
   );
 }

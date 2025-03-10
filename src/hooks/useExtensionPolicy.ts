@@ -39,7 +39,7 @@ export function useExtensionPolicy({
   companyId,
   userId,
 }: UseExtensionPolicyProps): UseExtensionPolicyReturn {
-  const [policy, setPolicy] = useState<ExtensionPolicy | null>(null);
+  const [policy, setPolicy] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -101,7 +101,7 @@ export function useExtensionPolicy({
     field: string,
     value: boolean
   ) => {
-    setPolicy((prevPolicy) => {
+    setPolicy((prevPolicy: any) => {
       // Create a deep copy of the policy to avoid mutation
       const newPolicy = { ...prevPolicy };
 
@@ -124,7 +124,7 @@ export function useExtensionPolicy({
     field: keyof ExtensionPolicy["metricsCollection"],
     value: boolean
   ) => {
-    setPolicy((prevPolicy) => ({
+    setPolicy((prevPolicy: any) => ({
       ...prevPolicy,
       metricsCollection: {
         ...prevPolicy.metricsCollection,
@@ -137,7 +137,7 @@ export function useExtensionPolicy({
     field: keyof ExtensionPolicy["metricsSettings"],
     value: boolean | number
   ) => {
-    setPolicy((prevPolicy) => ({
+    setPolicy((prevPolicy: any) => ({
       ...prevPolicy,
       metricsSettings: {
         ...prevPolicy.metricsSettings,
@@ -147,14 +147,14 @@ export function useExtensionPolicy({
   };
 
   const updateAllowlist = (domains: string[]) => {
-    setPolicy((prevPolicy) => ({
+    setPolicy((prevPolicy: any) => ({
       ...prevPolicy,
       allowlist: domains,
     }));
   };
 
   const updateBlocklist = (domains: string[]) => {
-    setPolicy((prevPolicy) => ({
+    setPolicy((prevPolicy: any) => ({
       ...prevPolicy,
       blocklist: domains,
     }));
