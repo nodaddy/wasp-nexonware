@@ -12,7 +12,7 @@ export default function LandingPage() {
     {
       name: "Starter",
       description: "Monitor",
-      price: "1.3",
+      price: "1",
       period: "month",
       currency: "$",
       buttonText: "Get Started",
@@ -35,7 +35,7 @@ export default function LandingPage() {
     {
       name: "Pro",
       description: "Monitor and Control",
-      price: "2",
+      price: "1.9",
       period: "month",
       currency: "$",
       buttonText: "Get Started",
