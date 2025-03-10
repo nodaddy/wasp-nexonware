@@ -63,7 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (firebaseUser) {
           try {
             // Get the ID token
-            const token = await getIdToken(firebaseUser, true);
+            const token = await getIdToken(firebaseUser);
 
             // Fetch user data from our API
             const response = await fetch("/api/auth/user", {
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
               setUser({
                 ...userData,
-                getIdToken: () => getIdToken(firebaseUser, true),
+                getIdToken: () => getIdToken(firebaseUser),
               });
             } else {
               // If API call fails, still set basic user data
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName,
                 emailVerified: firebaseUser.emailVerified,
-                getIdToken: () => getIdToken(firebaseUser, true),
+                getIdToken: () => getIdToken(firebaseUser),
               });
 
               // Reset role status since we couldn't verify
