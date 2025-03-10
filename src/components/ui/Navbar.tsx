@@ -199,12 +199,17 @@ export default function Navbar({ className = "" }: NavbarProps) {
             </div>
           )}
 
-          <Link
-            href="/pricing"
-            className="block py-2 text-neutral-700 dark:text-neutral-200 hover:text-primary-600 dark:hover:text-primary-400"
+          <div
+            onClick={() => {
+              const element = document.getElementById("pricing");
+              if (element) {
+                element.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className="text-neutral-700 dark:text-neutral-200 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer"
           >
             Pricing
-          </Link>
+          </div>
 
           <Link href="/demo" className="block py-2">
             <Button variant="outline" size="sm" fullWidth>
