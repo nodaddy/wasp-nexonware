@@ -206,9 +206,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
                       <User className="h-5 w-5 text-gray-500" />
                     </div>
-                    <span className="hidden md:block text-sm font-medium">
-                      {user?.email || "User"}
-                    </span>
                   </button>
 
                   {userMenuOpen && (
@@ -217,7 +214,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         Signed in as
                       </div>
                       <div className="px-4 py-2 text-sm font-medium border-b border-gray-100">
-                        {user?.email || "User"}
+                        {user?.email?.split("@")[0] || "User"}
                       </div>
                       <button
                         onClick={handleSignOut}

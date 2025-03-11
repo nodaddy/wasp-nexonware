@@ -78,11 +78,11 @@ export default function LandingPage() {
                 <span className="bg-clip-text text-transparent pr-[1px] bg-gradient-to-r from-indigo-400 to-purple-600">
                   W
                 </span>
-                orkforce{" "}
+                eb{" "}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-600">
                   A
                 </span>
-                nalytics &{" "}
+                ccess &{" "}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-600">
                   S
                 </span>
@@ -198,7 +198,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl mb-4 dark:text-white">
-              Workforce{" "}
+              Web Activity{" "}
               <span className="bg-gradient-to-r font-bold from-green-300 to-blue-400 bg-clip-text text-transparent">
                 Monitoring
               </span>{" "}
