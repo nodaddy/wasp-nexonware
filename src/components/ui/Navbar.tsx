@@ -41,7 +41,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
           <div className="relative">
-            <button
+            {/* <button
               className="flex items-center text-neutral-700 dark:text-neutral-200 hover:text-primary-600 dark:hover:text-primary-400"
               onClick={() => setIsSolutionsOpen(!isSolutionsOpen)}
             >
@@ -62,9 +62,9 @@ export default function Navbar({ className = "" }: NavbarProps) {
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </button>
+            </button> */}
 
-            {isSolutionsOpen && (
+            {/* {isSolutionsOpen && (
               <div className="absolute z-10 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1">
                 <Link
                   href="/solutions/enterprise"
@@ -85,7 +85,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
                   For Developers
                 </Link>
               </div>
-            )}
+            )} */}
           </div>
 
           <div
@@ -176,7 +176,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
             </svg>
           </button>
 
-          {isSolutionsOpen && (
+          {/* {isSolutionsOpen && (
             <div className="pl-4 space-y-2">
               <Link
                 href="/solutions/enterprise"
@@ -197,7 +197,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
                 For Developers
               </Link>
             </div>
-          )}
+          )} */}
 
           <div
             onClick={() => {

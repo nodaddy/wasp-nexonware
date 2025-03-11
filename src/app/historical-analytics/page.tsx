@@ -20,7 +20,6 @@ import {
   Line,
   Sector,
 } from "recharts";
-import { useDataFetching } from "@/hooks/useDataFetching";
 
 // Top Domains Chart Component
 const TopDomainsChart = ({
@@ -1382,22 +1381,9 @@ const AllEventsAnalytics = () => {
   );
 };
 
-// Define the summary data type
-interface SummaryData {
-  totalEvents: number;
-  byType: {
-    urls: number;
-    fileDownloads: number;
-    fileUploads: number;
-    clipboardEvents: number;
-  };
-  fromCache?: boolean;
-}
-
 export default function HistoricalAnalyticsPage() {
   const { user, loading, getUserToken } = useAuth();
   const router = useRouter();
-  const { fetchWithAuth } = useDataFetching();
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1433,26 +1419,62 @@ export default function HistoricalAnalyticsPage() {
         setSummaryLoading(true);
         setSummaryError(null);
 
+        const token = await getUserToken();
+
+        if (!token) {
+          throw new Error("Failed to get authentication token");
+        }
+
         // Build the query parameters
         const params = new URLSearchParams();
 
         console.log("Fetching historical summary data...");
-
-        // Use our new fetchWithAuth function instead of manual fetch with proper type
-        const result = await fetchWithAuth<SummaryData>(
+        const response = await fetch(
           `/api/analytics/historical/summary?${params.toString()}`,
           {
             headers: {
+              Authorization: `Bearer ${token}`,
               "X-Company-ID": user.customClaims?.companyId || "",
             },
-          },
-          // 15 minute cache duration for summary data
-          15 * 60 * 1000
+          }
         );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API error response:", errorData);
+
+          if (response.status === 500) {
+            if (errorData.error?.includes("BigQuery")) {
+              throw new Error(
+                "BigQuery connection error. Please check server configuration and credentials."
+              );
+            } else {
+              throw new Error(
+                errorData.error || "Server error occurred while fetching data"
+              );
+            }
+          } else if (response.status === 401) {
+            throw new Error("Authentication failed. Please log in again.");
+          } else if (response.status === 400) {
+            if (errorData.error?.includes("Company ID")) {
+              throw new Error(
+                "Company ID is missing. Please ensure your account is properly set up with a company."
+              );
+            } else {
+              throw new Error(errorData.error || "Bad request");
+            }
+          } else {
+            throw new Error(
+              errorData.error || "An error occurred while fetching data"
+            );
+          }
+        }
+
+        const result = await response.json();
 
         // Check if the API returned success: false
         if (!result.byType) {
-          throw new Error("Failed to fetch summary data");
+          throw new Error(result.error || "Failed to fetch summary data");
         }
 
         // If we get here, we have valid data
@@ -1468,7 +1490,7 @@ export default function HistoricalAnalyticsPage() {
     }
 
     fetchSummaryData();
-  }, [user, fetchWithAuth]);
+  }, [user, getUserToken]);
 
   // Function to manually refresh summary data
   const refreshSummaryData = async () => {
@@ -1476,23 +1498,71 @@ export default function HistoricalAnalyticsPage() {
 
     try {
       setSummaryLoading(true);
+      setSummaryError(null);
 
-      // Use our new fetchWithAuth function with forceRefresh=true and proper type
-      const result = await fetchWithAuth<SummaryData>(
-        `/api/analytics/historical/summary`,
+      const token = await getUserToken();
+      if (!token) {
+        throw new Error("Failed to get authentication token");
+      }
+
+      // Add a cache-busting parameter
+      const params = new URLSearchParams();
+      params.append("refresh", Date.now().toString());
+
+      console.log("Manually refreshing summary data...");
+      const response = await fetch(
+        `/api/analytics/historical/summary?${params.toString()}`,
         {
           headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
             "X-Company-ID": user.customClaims?.companyId || "",
           },
-        },
-        15 * 60 * 1000,
-        true // Force refresh
+        }
       );
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("API error response:", errorData);
+
+        if (response.status === 500) {
+          if (errorData.error?.includes("BigQuery")) {
+            throw new Error(
+              "BigQuery connection error. Please check server configuration and credentials."
+            );
+          } else {
+            throw new Error(
+              errorData.error || "Server error occurred while fetching data"
+            );
+          }
+        } else if (response.status === 401) {
+          throw new Error("Authentication failed. Please log in again.");
+        } else if (response.status === 400) {
+          if (errorData.error?.includes("Company ID")) {
+            throw new Error(
+              "Company ID is missing. Please ensure your account is properly set up with a company."
+            );
+          } else {
+            throw new Error(errorData.error || "Bad request");
+          }
+        } else {
+          throw new Error(
+            errorData.error || "An error occurred while fetching data"
+          );
+        }
+      }
+
+      const result = await response.json();
+
+      // Check if the API returned success: false
+      if (!result.byType) {
+        throw new Error(result.error || "Failed to fetch summary data");
+      }
+
       // If we get here, we have valid data
-      console.log("Summary data refreshed:", result);
+      console.log("Summary data received:", result);
       setSummaryData(result);
-      setSummaryFromCache(false);
+      setSummaryFromCache(result.fromCache === true);
     } catch (err: any) {
       console.error("Error refreshing summary data:", err);
       setSummaryError(err.message || "An error occurred");
