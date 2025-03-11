@@ -20,7 +20,7 @@ export default function Navbar({ className = "" }: NavbarProps) {
       className={`bg-white dark:bg-gray-900 shadow-sm dark:shadow-gray-800 py-4 fixed top-0 left-0 right-0 z-50 ${className}`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
-        {/* Logo */}
+        {/* Logo0  */}
         <Link href="/" className="flex items-center">
           <div className="relative h-8 w-8 mr-1">
             <Image
