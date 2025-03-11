@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "metrics": {
+      ".indexOn": ["timestamp"],
+      "$companyId": {
+        ".read": "auth != null && (root.child('companies').child($companyId).child('members').child(auth.uid).exists() || auth.token.companyId === $companyId || auth.token.role === 'admin')",
+        ".indexOn": ["timestamp"],
+        "$userId": {
+          ".indexOn": ["timestamp"],
+          ".read": "auth != null && (auth.uid === $userId || root.child('companies').child($companyId).child('members').child(auth.uid).exists() || auth.token.companyId === $companyId || auth.token.role === 'admin')",
+          ".write": "auth != null && auth.uid === $userId"
+        }
+      }
+    },
+    "companies": {
+      "$companyId": {
+        ".read": "auth != null && (root.child('companies').child($companyId).child('members').child(auth.uid).exists() || auth.token.companyId === $companyId || auth.token.role === 'admin')",
+        "members": {
+          "$userId": {
+            ".read": "auth != null && auth.uid === $userId",
+            ".write": "auth != null && (auth.token.role === 'admin' || auth.token.companyId === $companyId)"
+          }
+        }
+      }
+    },
+    "users": {
+      "$userId": {
+        ".read": "auth != null && auth.uid === $userId",
+        ".write": "auth != null && auth.uid === $userId",
+        "profile": {
+          ".read": "auth != null && (auth.uid === $userId || root.child('companies').child(root.child('users').child($userId).child('companyId').val()).child('members').child(auth.uid).exists() || auth.token.role === 'admin')"
+        }
+      }
+    }
+  }
+}

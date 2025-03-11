@@ -122,6 +122,10 @@ export default function DashboardPage() {
     },
   ]);
 
+  // Add cache state
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
   // Redirect analysts to analytics page
   useEffect(() => {
     if (!loading && user && user.customClaims?.role === "analyst") {
@@ -130,116 +134,137 @@ export default function DashboardPage() {
   }, [user, loading, router]);
 
   // Function to fetch dashboard data
-  const fetchDashboardData = useCallback(async () => {
-    if (!user || loading || authError) return;
+  const fetchDashboardData = useCallback(
+    async (forceRefresh = false) => {
+      if (!user || loading || authError) return;
 
-    try {
-      setError(null);
-      // Mark cards as loading
-      setStats((prevStats) =>
-        prevStats.map((stat, index) =>
-          index <= 1 ? { ...stat, isLoading: true, error: false } : stat
-        )
-      );
+      // Check if we should use cached data
+      const now = Date.now();
+      if (!forceRefresh && now - lastFetchTime < CACHE_DURATION) {
+        console.log("Using cached dashboard data");
+        return;
+      }
 
-      const token = await getUserToken();
-      console.log("Token1:", token);
-      if (!token) {
-        setError("Failed to get authentication token");
-        setAuthError(true);
+      try {
+        setError(null);
+        // Mark cards as loading
+        setStats((prevStats) =>
+          prevStats.map((stat, index) =>
+            index <= 1 ? { ...stat, isLoading: true, error: false } : stat
+          )
+        );
+
+        const token = await getUserToken();
+        // Remove token logging to avoid security risks
+        if (!token) {
+          setError("Failed to get authentication token");
+          setAuthError(true);
+          // Mark cards as error
+          setStats((prevStats) =>
+            prevStats.map((stat, index) =>
+              index <= 1 ? { ...stat, isLoading: false, error: true } : stat
+            )
+          );
+          return;
+        }
+
+        // Use Promise.all to fetch data in parallel
+        const [sessionsResponse, usersResponse] = await Promise.all([
+          fetch("/api/analytics/active-sessions", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch("/api/analytics/company-users", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        // Check responses
+        if (!sessionsResponse.ok) {
+          throw new Error("Failed to fetch active sessions");
+        }
+
+        if (!usersResponse.ok) {
+          throw new Error("Failed to fetch company users");
+        }
+
+        // Parse JSON responses in parallel
+        const [sessionsData, usersData] = await Promise.all([
+          sessionsResponse.json(),
+          usersResponse.json(),
+        ]);
+
+        // Update stats with real data
+        setStats((prevStats) => {
+          const newStats = [...prevStats];
+
+          // Update total users
+          newStats[0] = {
+            ...newStats[0],
+            value: usersData.totalUsers.toString(),
+            trend: usersData.trend,
+            description: "Active users in your organization",
+            isLoading: false,
+            error: false,
+          };
+
+          // Update active sessions
+          newStats[1] = {
+            ...newStats[1],
+            value: sessionsData.activeSessions.toString(),
+            trend: sessionsData.trend,
+            description: "Current active user sessions",
+            isLoading: false,
+            error: false,
+          };
+
+          return newStats;
+        });
+
+        // Update last fetch time
+        setLastFetchTime(now);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+
+        // Check if it's an authentication error
+        if (
+          error instanceof Error &&
+          (error.message.includes("authentication") ||
+            error.message.includes("credential") ||
+            error.message.includes("token"))
+        ) {
+          setAuthError(true);
+        }
+
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+
         // Mark cards as error
         setStats((prevStats) =>
           prevStats.map((stat, index) =>
             index <= 1 ? { ...stat, isLoading: false, error: true } : stat
           )
         );
-        return;
       }
+    },
+    [user, loading, authError, lastFetchTime]
+  );
 
-      // Fetch active sessions
-      const sessionsResponse = await fetch("/api/analytics/active-sessions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!sessionsResponse.ok) {
-        throw new Error("Failed to fetch active sessions");
-      }
-
-      const sessionsData = await sessionsResponse.json();
-
-      // Fetch company users
-      const usersResponse = await fetch("/api/analytics/company-users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!usersResponse.ok) {
-        throw new Error("Failed to fetch company users");
-      }
-
-      const usersData = await usersResponse.json();
-
-      // Update stats with real data
-      setStats((prevStats) => {
-        const newStats = [...prevStats];
-
-        // Update total users
-        newStats[0] = {
-          ...newStats[0],
-          value: usersData.totalUsers.toString(),
-          trend: usersData.trend,
-          description: "Active users in your organization",
-          isLoading: false,
-          error: false,
-        };
-
-        // Update active sessions
-        newStats[1] = {
-          ...newStats[1],
-          value: sessionsData.activeSessions.toString(),
-          trend: sessionsData.trend,
-          description: "Current active user sessions",
-          isLoading: false,
-          error: false,
-        };
-
-        return newStats;
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-
-      // Check if it's an authentication error
-      if (
-        error instanceof Error &&
-        (error.message.includes("authentication") ||
-          error.message.includes("credential") ||
-          error.message.includes("token"))
-      ) {
-        setAuthError(true);
-      }
-
-      setError(
-        error instanceof Error ? error.message : "An unknown error occurred"
-      );
-
-      // Mark cards as error
-      setStats((prevStats) =>
-        prevStats.map((stat, index) =>
-          index <= 1 ? { ...stat, isLoading: false, error: true } : stat
-        )
-      );
-    }
-  }, [user, loading, getUserToken, authError]);
-
-  // Fetch dashboard data on component mount
+  // Fetch dashboard data on component mount - with reduced dependencies
   useEffect(() => {
-    if (!authError) {
+    if (!authError && user && !loading) {
       fetchDashboardData();
     }
-  }, [user, loading, getUserToken, fetchDashboardData, authError]);
+  }, [user, loading, authError, fetchDashboardData]);
+
+  // Add a refresh function that users can call manually
+  const refreshDashboard = () => {
+    fetchDashboardData(true);
+  };
 
   const quickLinks = [
     {

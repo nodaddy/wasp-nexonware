@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminFirestore } from "@/lib/firebaseAdminCore";
 import { CustomClaims } from "@/types/firebase";
+import { Redis } from "@upstash/redis";
+
+// Initialize Redis client for caching if environment variables are available
+let redis: Redis | null = null;
+try {
+  if (
+    process.env.UPSTASH_REDIS_REST_URL &&
+    process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+    console.log("Redis client initialized for company-users caching");
+  }
+} catch (error) {
+  console.error("Failed to initialize Redis client:", error);
+}
+
+// Cache TTL in seconds (10 minutes - longer than active sessions since this changes less frequently)
+const CACHE_TTL = 600;
 
 // Helper function to extract domain from email
 const extractDomain = (email: string): string => {
@@ -57,6 +78,18 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Create cache key
+      const cacheKey = `company-users:${companyId}`;
+
+      // Try to get data from cache first
+      if (redis) {
+        const cachedData = await redis.get(cacheKey);
+        if (cachedData) {
+          console.log("Returning company users data from cache");
+          return NextResponse.json(cachedData);
+        }
+      }
+
       // Get the company from Firestore
       const companyDoc = await db.collection("companies").doc(companyId).get();
 
@@ -72,32 +105,77 @@ export async function GET(request: NextRequest) {
       const emailDomains = companyData?.emailDomains || [];
 
       if (!emailDomains.length) {
-        return NextResponse.json({
+        const responseData = {
           totalUsers: 0,
           trend: {
             value: "0%",
             positive: true,
           },
-        });
+        };
+
+        // Cache the result
+        if (redis) {
+          await redis.set(cacheKey, responseData, { ex: CACHE_TTL });
+        }
+
+        return NextResponse.json(responseData);
       }
 
-      // List all users
-      const listUsersResult = await adminAuth.listUsers();
+      // Instead of listing all users, which can be expensive for large user bases,
+      // we'll use a more targeted approach with pagination if available
 
-      // Filter users by domain
-      const companyUsers = listUsersResult.users.filter((user) => {
-        if (!user.email) return false;
-        const domain = extractDomain(user.email);
-        return emailDomains.includes(domain);
-      });
+      // For Firebase Auth, we can use the listUsers method with pagination
+      // This is more efficient than downloading all users at once
+      let allUsers: any[] = [];
+      let nextPageToken: string | undefined;
 
-      return NextResponse.json({
-        totalUsers: companyUsers.length,
+      // Limit the number of users we process to avoid excessive downloads
+      const MAX_USERS_TO_PROCESS = 1000;
+      let processedUsers = 0;
+
+      do {
+        // Get a batch of users (default is 1000)
+        const listUsersResult = await adminAuth.listUsers(1000, nextPageToken);
+
+        // Filter users by domain in this batch
+        const batchCompanyUsers = listUsersResult.users.filter((user) => {
+          if (!user.email) return false;
+          const domain = extractDomain(user.email);
+          return emailDomains.includes(domain);
+        });
+
+        // Add filtered users to our collection
+        allUsers = [...allUsers, ...batchCompanyUsers];
+
+        // Update the page token for the next batch
+        nextPageToken = listUsersResult.pageToken;
+
+        // Update processed users count
+        processedUsers += listUsersResult.users.length;
+
+        // Break if we've processed too many users to avoid excessive downloads
+        if (processedUsers >= MAX_USERS_TO_PROCESS) {
+          console.log(
+            `Reached maximum user processing limit of ${MAX_USERS_TO_PROCESS}`
+          );
+          break;
+        }
+      } while (nextPageToken);
+
+      const responseData = {
+        totalUsers: allUsers.length,
         trend: {
           value: "0%",
           positive: true,
         },
-      });
+      };
+
+      // Cache the result
+      if (redis) {
+        await redis.set(cacheKey, responseData, { ex: CACHE_TTL });
+      }
+
+      return NextResponse.json(responseData);
     } catch (error) {
       console.error("Error verifying token:", error);
       // Return a more detailed error message for debugging
