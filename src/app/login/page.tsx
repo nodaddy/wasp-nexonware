@@ -143,12 +143,12 @@ export default function LoginPage() {
         </Button>
 
         <div className="text-center text-sm text-neutral-subtitle">
-          Don't have an account?{" "}
+          Need help?{" "}
           <a
-            href="/register"
+            href="/forgot-password"
             className="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
           >
-            Register your company
+            Contact support
           </a>
         </div>
       </form>

@@ -36,7 +36,7 @@ const ARCHIVING_CONFIGS: ArchivingConfig[] = [
   {
     tableId: "user_metrics_archive",
     schemaType: "userMetrics",
-    daysToKeep: 90, // Keep 3 months of data in Firebase
+    daysToKeep: 1, // Keep 1 day of data in Firebase
     deleteAfterArchive: true,
   },
   // Add more configurations for different data paths

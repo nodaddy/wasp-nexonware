@@ -1,7 +1,5 @@
 import nodemailer from "nodemailer";
 import {
-  getCompanyRegistrationEmailTemplate,
-  getCompanyRegistrationPlainTextTemplate,
   getPasswordResetEmailTemplate,
   getPasswordResetPlainTextTemplate,
 } from "./emailTemplates";
@@ -51,35 +49,6 @@ export async function sendEmail(
     console.error("Error sending email:", error);
     return false;
   }
-}
-
-/**
- * Send a company registration verification email
- * @param email - Recipient email address
- * @param verificationLink - Verification link
- * @param companyName - Company name
- * @param adminName - Admin name
- * @returns Promise<boolean> - Whether the email was sent successfully
- */
-export async function sendCompanyRegistrationEmail(
-  email: string,
-  verificationLink: string,
-  companyName: string,
-  adminName: string
-): Promise<boolean> {
-  const subject = `Complete Your ${companyName} Registration`;
-  const html = getCompanyRegistrationEmailTemplate(
-    companyName,
-    adminName,
-    verificationLink
-  );
-  const text = getCompanyRegistrationPlainTextTemplate(
-    companyName,
-    adminName,
-    verificationLink
-  );
-
-  return sendEmail(email, subject, html, text);
 }
 
 /**
